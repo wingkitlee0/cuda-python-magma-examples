@@ -8,12 +8,13 @@ therefore must be in host memory.
 """
 
 import numpy as np
+import scipy.linalg
 import skcuda.magma as magma
 import time
 
 magma.magma_init()
 
-N=8172
+N=8196
 M = np.random.random((N,N))+1j*np.random.random((N,N))
 #M = np.array([[3,2,1],[1,2,2],[4,5,0]], dtype=np.complex128)  
 M_orig = M.copy()
@@ -34,13 +35,28 @@ rwork= np.zeros((2*N,), np.complex128)
 
 # Compute:
 gpu_time = time.time();
-status = magma.magma_zgeev(b'V', b'V', N, M.ctypes.data, N, w.ctypes.data, vl.ctypes.data, N, vr.ctypes.data, N, work.ctypes.data, lwork, rwork.ctypes.data)
+status = magma.magma_zgeev('N', 'V', N, M.ctypes.data, N, w.ctypes.data, vl.ctypes.data, N, vr.ctypes.data, N, work.ctypes.data, lwork, rwork.ctypes.data)
 gpu_time = time.time() - gpu_time;
 #status = magma.magma_sgesvd('A', 'A', m, n, x.ctypes.data, m, s.ctypes.data,
 #                            u.ctypes.data, m, vh.ctypes.data, n,
 #                            workspace.ctypes.data, Lwork)
 
 print("GPU time = ", gpu_time)
+
+# CPU time
+cpu_time = time.time()
+W, V = scipy.linalg.eig(M_orig)
+cpu_time = time.time() - cpu_time
+
+print("CPU time = ", cpu_time)
+
+
+
+
+
+
+
+
 
 # Confirm that solution is correct by ensuring that the original matrix can be
 # obtained from the decomposition:
