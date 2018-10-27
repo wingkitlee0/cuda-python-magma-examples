@@ -22,6 +22,10 @@ def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwa
     else:
         if len(a.shape) != 2:
             raise ValueError("M needs to be a rank 2 square array for eig.")
+
+        magma.magma_init()
+
+
         dtype = type(a[0,0])
 
         t = typedict_[dtype]
@@ -91,6 +95,8 @@ def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwa
             w_gpu = wr + 1j*wi
         else:
             w_gpu = w
+
+        magma.magma_finalize()
 
         return w_gpu, vr
 
