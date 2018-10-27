@@ -13,18 +13,19 @@ except Exception as err:
 typedict = {'s': np.float32, 'd': np.float64, 'c': np.complex64, 'z': np.complex128}
 typedict_= {v: k for k, v in typedict.items()}
 
-def eig(M, verbose=True, *args, **kwargs):
+def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwargs):
     """
+        Eigenvalue solver using Magma GPU library (variants of Lapack's geev).
     """
     if useScipy:
-        return scipy.linalg.eig(M, *args, **kwargs)
+        return scipy.linalg.eig(a, left=left, right=right, check_finite=check_finite)
     else:
-        if len(M.shape) != 2:
+        if len(a.shape) != 2:
             raise ValueError("M needs to be a rank 2 square array for eig.")
-        dtype = M.dtype
+        dtype = type(a[0,0])
 
         t = typedict_[dtype]
-        N = M.shape[0]
+        N = a.shape[0]
 
         # Set up output buffers:
         if t in ['s', 'd']:
@@ -33,8 +34,18 @@ def eig(M, verbose=True, *args, **kwargs):
         elif t in ['c', 'z']:
             w = np.zeros((N,), dtype) # eigenvalues
             
-        vl = np.zeros((N, N), dtype)
-        vr = np.zeros((N, N), dtype)
+        if left:
+            vl = np.zeros((N, N), dtype)
+            jobvl = 'V'
+        else:
+            vl = None
+            jobvl = 'N'
+        if right:
+            vr = np.zeros((N, N), dtype)
+            jobvr = 'V'
+        else:
+            vr = None
+            jobvr = 'N'
 
         # Set up workspace:
         if t == 's':
@@ -54,21 +65,21 @@ def eig(M, verbose=True, *args, **kwargs):
         # Compute:
         gpu_time = time.time();
         if t == 's':
-            status = magma.magma_sgeev('N', 'V', N, M_gpu.ctypes.data, N, 
+            status = magma.magma_sgeev(jobvl, jobvr, N, a.ctypes.data, N, 
                                     wr.ctypes.data, wi.ctypes.data, 
                                     vl.ctypes.data, N, vr.ctypes.data, N, 
                                     work.ctypes.data, lwork)
         if t == 'd':
-            status = magma.magma_dgeev('N', 'V', N, M_gpu.ctypes.data, N, 
+            status = magma.magma_dgeev(jobvl, jobvr, N, a.ctypes.data, N, 
                                     wr.ctypes.data, wi.ctypes.data, 
                                     vl.ctypes.data, N, vr.ctypes.data, N, 
                                     work.ctypes.data, lwork)
         if t == 'c':
-            status = magma.magma_cgeev('N', 'V', N, M_gpu.ctypes.data, N, 
+            status = magma.magma_cgeev(jobvl, jobvr, N, a.ctypes.data, N, 
                                     w.ctypes.data, vl.ctypes.data, N, vr.ctypes.data, N, 
                                     work.ctypes.data, lwork, rwork.ctypes.data)
         if t == 'z':
-            status = magma.magma_zgeev('N', 'V', N, M_gpu.ctypes.data, N, 
+            status = magma.magma_zgeev(jobvl, jobvr, N, a.ctypes.data, N, 
                                     w.ctypes.data, vl.ctypes.data, N, vr.ctypes.data, N, 
                                     work.ctypes.data, lwork, rwork.ctypes.data)
         gpu_time = time.time() - gpu_time;
