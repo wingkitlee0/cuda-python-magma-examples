@@ -38,13 +38,13 @@ def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwa
             vl = np.zeros((N, N), dtype)
             jobvl = 'V'
         else:
-            vl = None
+            vl = np.zeros((1, 1), dtype)
             jobvl = 'N'
         if right:
             vr = np.zeros((N, N), dtype)
             jobvr = 'V'
         else:
-            vr = None
+            vr = np.zeros((1, 1), dtype)
             jobvr = 'N'
 
         # Set up workspace:
