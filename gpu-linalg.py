@@ -1,5 +1,6 @@
 import numpy as np
 import time
+from scipy._lib._util import _asarray_validated
 
 try:
     import skcuda.magma as magma
@@ -16,6 +17,9 @@ typedict_= {v: k for k, v in typedict.items()}
 def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwargs):
     """
         Eigenvalue solver using Magma GPU library (variants of Lapack's geev).
+
+        Note:
+        - not a generalized eigenvalue solver
     """
     if useScipy:
         return scipy.linalg.eig(a, left=left, right=right, check_finite=check_finite)
@@ -23,11 +27,11 @@ def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwa
         if len(a.shape) != 2:
             raise ValueError("M needs to be a rank 2 square array for eig.")
 
+        a = _asarray_validated(a, check_finite=check_finite)
+        
         magma.magma_init()
-
-
+        
         dtype = type(a[0,0])
-
         t = typedict_[dtype]
         N = a.shape[0]
 
