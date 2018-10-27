@@ -1,6 +1,7 @@
 import numpy as np
 import time
 from scipy._lib._util import _asarray_validated
+import sys
 
 try:
     import skcuda.magma as magma
@@ -108,8 +109,8 @@ def eig(a, left=False, right=True, check_finite=True, verbose=True, *args, **kwa
 
 if __name__=='__main__':
     print("# Using Magma library: ", (not useScipy))
-    N = 100
+    N = int(sys.argv[1])
     #M_gpu = np.random.random((N,N))+1j*np.random.random((N,N))
     M_gpu = np.random.random((N, N))
-    W, V = eig(M_gpu)
+    W, V = eig(M_gpu, left=False, right=True)
     
