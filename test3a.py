@@ -17,7 +17,7 @@ M_gpu += np.random.random((N, N))
 
 
 np.random.seed(1234)
-M_cpu = np.zeros((N,N), dtype=np.complex128)
+M_cpu = np.zeros((N,N), dtype=np.complex128, order='F')
 M_cpu += np.random.random((N, N))
 
 print(M_cpu == M_gpu)
